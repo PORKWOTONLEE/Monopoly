@@ -1,0 +1,7 @@
+# Hashes of file build rules.
+65562057a328d97cf60f50be49866e89 CMakeFiles/Vita2d_Test.self
+8146aea89620de542f2485bd16b9b442 CMakeFiles/Vita2d_Test.vpk
+b8721eb7b67c5c1be24c502c92f4b51e Vita2d_Test.self.out
+3d1ab1999d37a0845c309edd62fdbbef Vita2d_Test.velf
+f8c02803507671e40d3088f99ffd28ae Vita2d_Test.vpk.out
+2d2f3f84c614623b262fab6039b07c87 Vita2d_Test.vpk_param.sfo
