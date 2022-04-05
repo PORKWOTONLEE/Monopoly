@@ -16,6 +16,7 @@
 #include "common.h"
 #include "player.h"
 #include "block.h"
+#include "log.h"
 
 // 当前操作玩家
 unsigned int current_Player_No;
@@ -213,6 +214,8 @@ void Create_Player(int player_Num)
             player player_Entity = player("player" + std::to_string(i));
 
             player_Vector.push_back(player_Entity);
+
+            Log_Info("玩家%d：名称%s，金币%d\n", i, player_Entity.name.c_str(), player_Entity.coin);
 
             ++i; 
         }
@@ -471,6 +474,8 @@ int Is_Anyone_Lost(void)
 int main(int argc, char *argv[]) 
 {
     unsigned int player_Num = 2;
+
+    Log_Open(LOG_PATH);
 
     srand((unsigned)time(NULL));
 

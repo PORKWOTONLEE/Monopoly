@@ -1,10 +1,14 @@
 !_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
 !_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
 !_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/home/ben/Monopoly/	//
 !_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
 !_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
-!_TAG_PROGRAM_VERSION	0.0.0	//
+!_TAG_PROGRAM_VERSION	5.9.0	/p5.9.20220320.0/
 $(OBJ_DIRS)	Makefile	/^$(OBJ_DIRS):$/;"	t
 $(PROJECT).elf	Makefile	/^$(PROJECT).elf: $(OBJS)$/;"	t
 $(PROJECT).velf	Makefile	/^$(PROJECT).velf: $(PROJECT).elf$/;"	t
@@ -222,6 +226,11 @@ HOUSE	src/common.h	/^    HOUSE$/;"	e	enum:__anon70586b7b0103
 ID_VOID_MAIN	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^# define ID_VOID_MAIN$/;"	d	file:
 INIT_COIN	src/common.h	/^#define INIT_COIN /;"	d
 Is_Anyone_Lost	src/main.cpp	/^int Is_Anyone_Lost(void)$/;"	f	typeref:typename:int
+LOG_FREQUENCY	src/log.h	/^#define LOG_FREQUENCY /;"	d
+LOG_PATH	src/log.h	/^#define LOG_PATH /;"	d
+Log_Info	src/log.h	/^#define Log_Info(/;"	d
+Log_Open	src/log.cpp	/^void Log_Open(const char *file_Name)$/;"	f	typeref:typename:void
+Log_Redirect	src/log.cpp	/^void Log_Redirect(const char *format, ...)$/;"	f	typeref:typename:void
 MINGW	build/CMakeFiles/3.16.3/CMakeCCompiler.cmake	/^  set(MINGW 1)$/;"	v
 MINGW	build/CMakeFiles/3.16.3/CMakeCXXCompiler.cmake	/^  set(MINGW 1)$/;"	v
 Move	src/main.cpp	/^void Move(void)$/;"	f	typeref:typename:void
@@ -276,6 +285,7 @@ Vita2d_Test/fast	build/Makefile	/^Vita2d_Test\/fast:$/;"	t
 WIDTH	src/main.cpp	/^    WIDTH = 960,$/;"	e	enum:psv_Resolution	file:
 __BLOCK_H__	src/block.h	/^#define __BLOCK_H__$/;"	d
 __COMMON_H__	src/common.h	/^#define __COMMON_H__$/;"	d
+__LOG_H__	src/log.h	/^#define __LOG_H__$/;"	d
 __PLAYER_H__	src/player.h	/^#define __PLAYER_H__$/;"	d
 __anon70586b7b0103	src/common.h	/^{$/;"	g
 all	Makefile	/^all: package$/;"	t
@@ -319,6 +329,7 @@ info_version	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^char
 info_version_internal	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^char const info_version_internal[] = {$/;"	v	typeref:typename:char const[]
 info_version_internal	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^char const info_version_internal[] = {$/;"	v	typeref:typename:char const[]
 level	src/block.h	/^        int level;$/;"	m	class:block	typeref:typename:int
+log_Handle	src/log.cpp	/^FILE *log_Handle;$/;"	v	typeref:typename:FILE *
 main	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^int main(argc, argv) int argc; char *argv[];$/;"	f
 main	build/CMakeFiles/3.16.3/CompilerIdC/CMakeCCompilerId.c	/^void main() {}$/;"	f	typeref:typename:void
 main	build/CMakeFiles/3.16.3/CompilerIdCXX/CMakeCXXCompilerId.cpp	/^int main(int argc, char* argv[])$/;"	f	typeref:typename:int
@@ -354,6 +365,12 @@ src/block.cpp.s	build/Makefile	/^src\/block.cpp.s:$/;"	t
 src/block.i	build/Makefile	/^src\/block.i: src\/block.cpp.i$/;"	t
 src/block.obj	build/Makefile	/^src\/block.obj: src\/block.cpp.obj$/;"	t
 src/block.s	build/Makefile	/^src\/block.s: src\/block.cpp.s$/;"	t
+src/log.cpp.i	build/Makefile	/^src\/log.cpp.i:$/;"	t
+src/log.cpp.obj	build/Makefile	/^src\/log.cpp.obj:$/;"	t
+src/log.cpp.s	build/Makefile	/^src\/log.cpp.s:$/;"	t
+src/log.i	build/Makefile	/^src\/log.i: src\/log.cpp.i$/;"	t
+src/log.obj	build/Makefile	/^src\/log.obj: src\/log.cpp.obj$/;"	t
+src/log.s	build/Makefile	/^src\/log.s: src\/log.cpp.s$/;"	t
 src/main.cpp.i	build/Makefile	/^src\/main.cpp.i:$/;"	t
 src/main.cpp.obj	build/Makefile	/^src\/main.cpp.obj:$/;"	t
 src/main.cpp.s	build/Makefile	/^src\/main.cpp.s:$/;"	t
