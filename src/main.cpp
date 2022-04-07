@@ -16,13 +16,17 @@
 #include "common.h"
 #include "player.h"
 #include "block.h"
+#include "render.h"
 #include "log.h"
 
-// 当前操作玩家
-unsigned int current_Player_No;
+extern vita2d_font *font;
 
-// 骰子数
+// 当前操作玩家
+int current_Player_No;
+
+// 当前骰子数
 int dice_Num;
+char dice_Num_Buffer[20];
 
 // 全局玩家vector
 vector<player> player_Vector;
@@ -30,112 +34,13 @@ vector<player> player_Vector;
 // 全局地图块vector
 vector<block> map_Vector;
 
-// 全局字体
-vita2d_font *font;
-
-// 全局地图素材
-vita2d_texture *horizontal_Line;
-vita2d_texture *verizontal_Line;
+// 全局渲染类
+render draw; 
 
 // 全局控制器
 SceCtrlData pad;
 
-enum psv_Resolution
-{
-    WIDTH = 960,
-    HEIGHT = 544
-};
-
-void Draw_Title(void)
-{
-    char title_Buffer[50];
-    
-    sprintf(title_Buffer, "当前玩家：player%u", current_Player_No);
-    vita2d_font_draw_text(font, 5, 20, RGBA8(255, 255, 255, 255), 20, title_Buffer);
-    sprintf(title_Buffer, "金币数：%d", player_Vector[current_Player_No].coin);
-    vita2d_font_draw_text(font, 5, 40, RGBA8(255, 255, 255, 255), 20, title_Buffer);
-    sprintf(title_Buffer, "拥有房产：");
-    for (int i=0; i<player_Vector[current_Player_No].own_Block.size(); ++i)
-    {
-       strcat(title_Buffer, map_Vector[player_Vector[current_Player_No].own_Block[i]].name.c_str());
-       strcat(title_Buffer, " ");
-    }
-    vita2d_font_draw_text(font, 5, 60, RGBA8(255, 255, 255, 255), 20, title_Buffer);
-
-    return;
-}
-
-void Draw_Map(void)
-{
-    vita2d_draw_texture(horizontal_Line, 0, 80);
-    vita2d_draw_texture(verizontal_Line, 192, 80);
-    vita2d_draw_texture(verizontal_Line, 384, 80);
-    vita2d_draw_texture(verizontal_Line, 576, 80);
-    vita2d_draw_texture(verizontal_Line, 768, 80);
-    vita2d_draw_texture(horizontal_Line, 0, 272);
-
-    return;
-}
-
-void Draw_Map_Detail(void)
-{
-    char map_Info_Buffer[50];
-    int block_No;
-
-    for (int i=0; i<5; ++i)
-    {
-        block_No = player_Vector[current_Player_No].position + i - 2;
-
-        if (block_No < 0)
-        {
-            block_No += map_Vector.size();
-        }
-        else if (block_No >= map_Vector.size())
-        {
-            block_No -= map_Vector.size(); 
-        }
-
-        sprintf(map_Info_Buffer, "%d：%s", block_No, map_Vector[block_No].name.c_str());
-        vita2d_font_draw_text(font, 5+i*192, 100, RGBA8(255, 255, 255, 255), 20, map_Info_Buffer);
-
-        if (HOUSE == map_Vector[block_No].type)
-        {
-            sprintf(map_Info_Buffer, "房主：%s", map_Vector[block_No].owner.c_str());
-            vita2d_font_draw_text(font, 5+i*192, 120, RGBA8(255, 255, 255, 255), 20, map_Info_Buffer);
-
-            sprintf(map_Info_Buffer, "价格：%d", map_Vector[block_No].price[0]);
-            vita2d_font_draw_text(font, 5+i*192, 140, RGBA8(255, 255, 255, 255), 20, map_Info_Buffer);
-
-            sprintf(map_Info_Buffer, "租金：%d", map_Vector[block_No].rent[map_Vector[block_No].level]);
-            vita2d_font_draw_text(font, 5+i*192, 160, RGBA8(255, 255, 255, 255), 20, map_Info_Buffer);
-        }
-    }
-
-    return;
-}
-
-void Draw_Screen(void)
-{
-    Draw_Title();
-    Draw_Map();
-    Draw_Map_Detail();
-
-    return;
-}
-
-void Draw_Info(char* info)
-{
-    vita2d_start_drawing();		
-    vita2d_clear_screen();
-    Draw_Screen();
-    vita2d_font_draw_text(font, 50, HEIGHT/2+150, RGBA8(255, 255, 255, 255), 20, info);
-    vita2d_end_drawing();
-    vita2d_swap_buffers();
-
-    return;
-}
-
-void Set_Current_Player(unsigned int player_No)
+void Set_Current_Player(int player_No)
 {
     if ((player_No>=0) && player_No<player_Vector.size())
     {
@@ -145,7 +50,7 @@ void Set_Current_Player(unsigned int player_No)
     return;
 }
 
-unsigned int Get_Current_Player(void)
+int Get_Current_Player(void)
 {
     return current_Player_No;
 }
@@ -159,17 +64,17 @@ void *Change_Player_Num(void *player_Num)
 
         if (pad.buttons & SCE_CTRL_UP)
         {
-            if (*(unsigned int *)player_Num<6)
+            if (*(int *)player_Num<6)
             {
-                *(unsigned int *)player_Num+=1;
+                *(int *)player_Num+=1;
             }
             sceKernelDelayThread(100000);
         }
         if (pad.buttons & SCE_CTRL_DOWN)
         {
-            if (*(unsigned int *)player_Num > 2)
+            if (*(int *)player_Num > 2)
             {
-                *(unsigned int *)player_Num-=1;
+                *(int *)player_Num-=1;
             }
             sceKernelDelayThread(100000);
         }
@@ -178,10 +83,27 @@ void *Change_Player_Num(void *player_Num)
     return NULL;
 }
 
+void *Change_Dice_Num(void *buffer)
+{
+    sceCtrlPeekBufferPositive(0, &pad, 1);
+    while (!(pad.buttons & SCE_CTRL_CIRCLE))
+    {
+        sceCtrlPeekBufferPositive(0, &pad, 1);
+
+        dice_Num = (int)rand()%6+1; 
+
+        sprintf(dice_Num_Buffer, "按O键停下 %d", dice_Num);
+    }
+
+    return NULL;
+}
+
 // 设定玩家人数
-void Set_Player_Num(unsigned int *player_Num)
+void Set_Player_Num(int *player_Num)
 {
     char player_Num_Buffer[20];
+
+    Log_Info("Set Player Num\n");
 
     pthread_t t;
     pthread_create(&t, NULL, Change_Player_Num, player_Num);
@@ -190,7 +112,7 @@ void Set_Player_Num(unsigned int *player_Num)
     {
         sceCtrlPeekBufferPositive(0, &pad, 1);
 
-        sprintf(player_Num_Buffer, "玩家数量：%u", *player_Num);
+        sprintf(player_Num_Buffer, " 玩家数量：%d", *player_Num);
 
         vita2d_start_drawing();		
         vita2d_clear_screen();
@@ -215,97 +137,85 @@ void Create_Player(int player_Num)
 
             player_Vector.push_back(player_Entity);
 
-            Log_Info("玩家%d：名称%s，金币%d\n", i, player_Entity.name.c_str(), player_Entity.coin);
-
             ++i; 
         }
     }
+
+    Log_Info("Player Data Init: Total Number Of Player %d\n", player_Num);
 
     return;
 }
 
 void Create_Map(void)
 {
+    char* word;
+    char line[100];
+    FILE *fp; 
+
     // 读取地图文件
-    std::ifstream fp("app0:/assets/map.csv");
+    Log_Debug("Open Map File\n");
+    fp = fopen("app0:/assets/map.csv", "r");
     if (!fp)
     {
         return;
     }
-    std::string line;
 
     // 舍弃第一行
-    std::getline(fp, line);
+    fgets(line, sizeof(line), fp);
 
     // 按行循环读取地图块数据
-    while(std::getline(fp, line))
+    Log_Debug("Load Map Data\n");
+    while(fgets(line, sizeof(line), fp))
     {
         vector<string> map_Info_Vector;
-        std::string map_Info;
+
+        strcpy(&line[strlen(line)-1], "\0");
 
         // 读取地图块数据
-        std::istringstream read_line(line);
+        word = strtok(line, ",");
         
-        while(std::getline(read_line, map_Info, ','))
+        while(NULL != word)
         {
-            map_Info_Vector.push_back(map_Info);
+            map_Info_Vector.push_back(word);
+            word = strtok(NULL, ",");
         }
 
         block block_Entity(map_Info_Vector);
 
-        vector<string>().swap(map_Info_Vector);
-
         map_Vector.push_back(block_Entity);
     }
 
-    fp.close();
+    Log_Info("Map Data Init: Total Number Of Map Block %d\n", map_Vector.size());
+
+    fclose(fp);
 
     return;
 }
 
 void Set_First_Move_Player(void)
 {
-    Set_Current_Player((unsigned int)rand()%player_Vector.size());
+    Log_Debug("Set First Player\n");
+
+    Set_Current_Player((int)rand()%player_Vector.size());
 
     return;
 }
 
 void Dice(void)
 {
-    char dice_Num_Buffer[20];
-    dice_Num = (unsigned int)rand()%6+1; 
-    int i = 100;
+    pthread_t t;
+
+    dice_Num = (int)rand()%6+1; 
 
     sceCtrlPeekBufferPositive(0, &pad, 1);
 
-    Draw_Info((char *)"是否要投掷骰子？按O键确认");
+    draw.Screen_With_Confirm(SCE_CTRL_CIRCLE, "是否要投掷骰子？按O键确认");
 
-    while (!(pad.buttons & SCE_CTRL_CIRCLE))
-    {
-        sceCtrlPeekBufferPositive(0, &pad, 1);
-    }
+    pthread_create(&t, NULL, Change_Dice_Num, NULL);
 
-    sceKernelDelayThread(100000);
+    draw.Screen_With_Confirm(SCE_CTRL_CIRCLE, dice_Num_Buffer);
 
-    while (1)
-    {
-        sceCtrlPeekBufferPositive(0, &pad, 1);
-        if (pad.buttons & SCE_CTRL_CIRCLE)
-        {
-            break;
-        }
-
-        dice_Num = (unsigned int)rand()%6+1; 
-
-        sprintf(dice_Num_Buffer, "按O键停下 %d", dice_Num);
-
-        Draw_Info(dice_Num_Buffer);
-    }
-
-
-    sprintf(dice_Num_Buffer, "骰子数值：%d", dice_Num);
-
-    Draw_Info(dice_Num_Buffer);
+    draw.Screen("骰子数值：%d", dice_Num);
     sceKernelDelayThread(1000000);
 
     return;
@@ -315,21 +225,13 @@ void Move(void)
 {
     for (;dice_Num>0; --dice_Num)
     {
-        Draw_Info((char *)"按O键前进");
-
-        sceCtrlPeekBufferPositive(0, &pad, 1);
-
-        while (!(pad.buttons & SCE_CTRL_CIRCLE))
-        {
-            sceCtrlPeekBufferPositive(0, &pad, 1);
-        }
-        sceKernelDelayThread(100000);
+        draw.Screen_With_Confirm(SCE_CTRL_CIRCLE, "按O键前进，剩余步数 %d", dice_Num);
 
         ++player_Vector[current_Player_No].position;
 
         if (player_Vector[current_Player_No].position >= map_Vector.size())
         {
-            player_Vector[current_Player_No].position -= map_Vector.size(); 
+            player_Vector[current_Player_No].position -= map_Vector.size();
         }
 
         sceKernelDelayThread(100000);
@@ -344,17 +246,17 @@ void Event(void)
     {
         case START:
             player_Vector[current_Player_No].coin += 2000;
-            Draw_Info((char *)"站在起点，获得2000元");
+            draw.Screen("站在起点，获得2000元");
             sceKernelDelayThread(1000000);
             break;
         case CHANCE:
             player_Vector[current_Player_No].coin += 2000;
-            Draw_Info((char *)"彩票中奖，获得2000元");
+            draw.Screen("彩票中奖，获得2000元");
             sceKernelDelayThread(1000000);
             break;
         case DESTINY:
             player_Vector[current_Player_No].coin -= 2000;
-            Draw_Info((char *)"做变性手术，交费2000元");
+            draw.Screen("做变性手术，交费2000元");
             sceKernelDelayThread(1000000);
             break;
         case HOUSE:
@@ -365,11 +267,11 @@ void Event(void)
                 if (map_Vector[player_Vector[current_Player_No].position].owner == player_Vector[current_Player_No].name)
                 {
                     // 判断房子可否升级
-                    if (map_Vector[player_Vector[current_Player_No].position].level <=4)
+                    if (map_Vector[player_Vector[current_Player_No].position].level <=3)
                     {
                         while (1)
                         {
-                            Draw_Info((char *)"是否升级此栋房屋，O键确认，X键取消");
+                            draw.Screen("是否升级此栋房屋，O键确认，X键取消");
 
                             sceCtrlPeekBufferPositive(0, &pad, 1);
 
@@ -380,12 +282,12 @@ void Event(void)
                                 {
                                     player_Vector[current_Player_No].coin -= map_Vector[player_Vector[current_Player_No].position].price[map_Vector[player_Vector[current_Player_No].position].level+1];
                                     ++map_Vector[player_Vector[current_Player_No].position].level;
-                                    Draw_Info((char *)"升级成功");
+                                    draw.Screen("升级成功");
                                     sceKernelDelayThread(1000000);
                                 }
                                 else
                                 {
-                                    Draw_Info((char *)"资金不足");
+                                    draw.Screen("资金不足");
                                     sceKernelDelayThread(1000000);
                                 }
                                 break;
@@ -407,7 +309,7 @@ void Event(void)
                             player_Vector[i].coin += map_Vector[player_Vector[current_Player_No].position].rent[map_Vector[player_Vector[current_Player_No].position].level];
                         }
                     }
-                    Draw_Info((char *)"上缴房租");
+                    draw.Screen("上缴房租");
                     sceKernelDelayThread(1000000);
                 }
             }
@@ -415,7 +317,7 @@ void Event(void)
             {
                 while (1)
                 {
-                    Draw_Info((char *)"是否购买此栋房屋，O键确认，X键取消");
+                    draw.Screen("是否购买此栋房屋，O键确认，X键取消");
 
                     sceCtrlPeekBufferPositive(0, &pad, 1);
 
@@ -427,12 +329,12 @@ void Event(void)
                             player_Vector[current_Player_No].coin -= map_Vector[player_Vector[current_Player_No].position].price[map_Vector[player_Vector[current_Player_No].position].level];
                             map_Vector[player_Vector[current_Player_No].position].owner = player_Vector[current_Player_No].name;
                             player_Vector[current_Player_No].own_Block.push_back(player_Vector[current_Player_No].position);
-                            Draw_Info((char *)"购买成功");
+                            draw.Screen("购买成功");
                             sceKernelDelayThread(1000000);
                         }
                         else
                         {
-                            Draw_Info((char *)"资金不足");
+                            draw.Screen("资金不足");
                             sceKernelDelayThread(1000000);
                         }
                         break;
@@ -464,33 +366,24 @@ int Is_Anyone_Lost(void)
     {
         if (0 >= player_Vector[i].coin)
         {
-            return 1;
+            return 0;
         }
     }
 
-    return 0;
+    return 1;
 }
 
 int main(int argc, char *argv[]) 
 {
-    unsigned int player_Num = 2;
+    int player_Num = 2;
 
     Log_Open(LOG_PATH);
 
+    Log_Info("Random Mod Init\n");
     srand((unsigned)time(NULL));
 
-    // 渲染模组初始化
-    vita2d_init();
-    vita2d_set_clear_color(BLACK);
-
-    // 加载字体
-    font = vita2d_load_font_file("app0:assets/font.ttf");
-
-    // 加载地图块素材 
-    horizontal_Line = vita2d_load_PNG_file("app0:/assets/line.png");
-    verizontal_Line = vita2d_load_PNG_file("app0:/assets/delim.png");
-
     // 控制器初始化 
+    Log_Info("Control Mod Init\n");
     sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG_WIDE);
 
     Set_Player_Num(&player_Num);
@@ -501,7 +394,7 @@ int main(int argc, char *argv[])
 
     Set_First_Move_Player();
 
-    while (1)
+    while (Is_Anyone_Lost())
     {
         Dice();
 
@@ -510,19 +403,7 @@ int main(int argc, char *argv[])
         Event();
 
         Change_Player();
-
-        if (Is_Anyone_Lost())
-        {
-            break;
-        }
     }
-
-    // 渲染模组释放
-    vita2d_fini();
-
-    vita2d_free_font(font);
-    vita2d_free_texture(verizontal_Line);
-    vita2d_free_texture(horizontal_Line);
 
     sceKernelExitProcess(0);
 

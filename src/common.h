@@ -4,6 +4,7 @@
 #define INIT_COIN 15000
 
 #define BLACK RGBA8(0, 0, 0, 0xFF)
+#define WHITE RGBA8(0xFF, 0xFF, 0xFF, 0xFF)
 
 typedef enum
 {
@@ -13,5 +14,11 @@ typedef enum
     HOUSE
 
 }block_Type;
+
+enum psv_Resolution
+{
+    WIDTH = 960,
+    HEIGHT = 544
+};
 
 #endif

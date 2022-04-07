@@ -43,6 +43,7 @@ add_executable(${PROJECT_NAME}
   src/main.cpp
   src/player.cpp
   src/block.cpp
+  src/render.cpp
   src/log.cpp
 )
 

@@ -4,6 +4,7 @@
 #include "log.h"
 
 FILE *log_Handle;
+static int LOG_MASK = LOG_LEVEL_INFO | LOG_LEVEL_DEBUG;
 
 void Log_Open(const char *file_Name)
 {
@@ -12,9 +13,14 @@ void Log_Open(const char *file_Name)
     return;
 }
 
-void Log_Redirect(const char *format, ...)
+void Log_Redirect(int level, const char *format, ...)
 {
     if (NULL == log_Handle)
+    {
+        return;
+    }
+
+    if (0 == (level & LOG_MASK))
     {
         return;
     }
@@ -33,6 +39,13 @@ void Log_Redirect(const char *format, ...)
         log_Handle = fopen(LOG_PATH, "a");
         log_Times = 0;
     }
+
+    return;
+}
+
+void Set_Log_Level(int level)
+{
+    LOG_MASK&=level;
 
     return;
 }
